@@ -11,24 +11,6 @@ from typing import List, Dict
 from transformations import ComposeDouble, ComposeSingle
 
 
-class RadarLoader(Dataset):
-    def __init__(self, dataset_path, dataset_size = 100):
-        self.dataset_path = dataset_path
-        self.dataset_size = dataset_size
-
-
-    def __len__(self):
-        return len(self.dataset_path)
-
-    def __getitem__(self, index):
-
-        data = h5py.File('data.h5', 'r')
-        img = data['rdms'][index]
-        y_label = data['labels'][str(index)][4]
-
-        return (img, y_label)
-
-
 class RadarDetectionDataSet(Dataset):
     """
     Builds a dataset with images and their respective targets.
