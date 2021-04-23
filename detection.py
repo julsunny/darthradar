@@ -2,16 +2,16 @@
 Detection of regions of interests in the radar doppler maps
 """
 
-from typing import Dict
+from typing import Union, Dict
 
 import h5py
 import torch
 import numpy as np
-from scipy import optimize.linear_sum_assignment
+from scipy.optimize import linear_sum_assignment
 
 Box = torch.Tensor
 
-def IOU(box1: Box, box2: Box) -> f32:
+def IOU(box1: Box, box2: Box) -> float:
     """IOU = Area of Union / Area of Intersection"""
     # WARNING this function uses lower left corner, width, height to define a box
     x0, y0, x1, y1 = box1
@@ -26,7 +26,7 @@ def IOU(box1: Box, box2: Box) -> f32:
 
     if w_intersection <= 0 or h_intersection <= 0: 
         # area of intersection is 0 -> cost is infinite
-        return float(inf)
+        return float('inf')
 
     I = w_intersection * h_intersection
 
@@ -54,7 +54,7 @@ def evalute_box_finder(peak_detector, data_set: torch.utils.data.Dataset):
     assert len(data_set) > 0
     assert isinstance(data_set[0][0], np.ndarray)
     assert all(key in data_set[0][1] for key in ['boxes', 'labels', 'image_id', 'area'])
-    assert isinstance(data_set[0][1]['boxes'], torch.FloatTensor)
+    assert isinstance(data_set[0][1]['boxes'], torch.Tensor)
     # some more asserts maybe?
 
     box_errors: Dict[int, Union[float, str]] = dict()
@@ -70,11 +70,5 @@ def evalute_box_finder(peak_detector, data_set: torch.utils.data.Dataset):
         # calculate the sum of the matched pairs' costs
         total_cost = sum(cost_matrix[row_idx, col_idx] for row_idx, col_idx in zip(row_indices, col_indices))
         box_errors[tgt['image_id']] = total_cost
-
-
-
-
-
-
 
 #iou = [IOU(y_test[i], y_pred[i]) for i in range(len(x_test))]
