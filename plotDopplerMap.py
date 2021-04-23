@@ -38,4 +38,6 @@ for idx,dmap in enumerate(data['rdms']):
         ax.add_patch(rect)
     plt.title(title)
     plt.draw()
-    plt.pause(1)
+    plt.show()
+    plt.pause(20)
+    plt.close()

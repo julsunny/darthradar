@@ -30,7 +30,7 @@ data = h5py.File('data.h5', 'r')
 Xy = []
 
 # Go through every radar frame.
-for idx,element in enumerate(data['rdms']):
+for idx, element in enumerate(data['rdms']):
     # Prepare an empty list for storing the radar frame.
     # This is required since the radar frame comes in as a matrix but for this example
     # it should be saved as vector.
@@ -85,5 +85,5 @@ score = accuracy(y_test, y_pred)
 print(score)
 
 # Plot the confusion matrix.
-plot_confusion_matrix(model, X_test, y_test)
-plt.show()
+#plot_confusion_matrix(model, X_test, y_test)
+#plt.show()
