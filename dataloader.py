@@ -22,8 +22,8 @@ class RadarDetectionDataSet(Dataset):
     """
 
     def __init__(self,
-                 input_start,
-                 input_stop,
+                 input_start = 0,
+                 input_stop = 375,
                  use_cache: bool = False,
                  convert_to_format: str = None,
                  mapping: bool = True,
@@ -114,3 +114,11 @@ class RadarDetectionDataSet(Dataset):
 
         return {'x': x, 'y': target, 'x_name': '', 'y_name': ''}
 
+
+def get_img_tgt_tuple_by_id(id: int):
+    ds = RadarDetectionDataSet()
+    return (ds[0]['x'], ds[0]['y'])
+    #images = np.load("doppler_data.npy")
+    #with open("label_data.pkl","rb") as f:
+    #    target_dicts = pickle.load(f)
+    #return (images[id], target_dicts[str(id)])

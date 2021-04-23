@@ -36,11 +36,11 @@ def plot_rdms(rdms, target, ax, cmap = "gist_ncar", v_range = (500, 6000)):
     '4' : 'no object'
     }
     
-    ax.imshow(rdms.T.numpy(), origin = 'lower', interpolation = 'bilinear', cmap = cmap, vmin = v_range[0], vmax = v_range[6000])
+    ax.imshow(rdms.T.numpy(), origin = 'lower', interpolation = 'bilinear', cmap = cmap, vmin = v_range[0], vmax = v_range[1])
     for idx, box_t in enumerate(target["boxes"]):
         box = box_t.numpy()
         rect = patches.Rectangle((box[1], box[0]), box[3] - box[1], box[2] - box[0], linewidth = 1, edgecolor = 'pink', facecolor = 'none')
-        box_class = classes[str(int(target["labels"][4]))]
+        box_class = classes[str(int(target["labels"]))]
         ax.annotate(box_class, (box[3], box[2]), color = 'w', weight = 'bold', fontsize = 5, ha = 'left', va = 'bottom')
         ax.add_patch(rect)
         
@@ -74,7 +74,7 @@ def grid_plot(samples, ncols = 3, cmap = "gist_ncar", v_range = (500, 6000)):
         
 #%%       
 
-data_path = "M:/programming/projects/TUM_Hackathon_Infineon_Radar_Challenge/darthradar/data.h5"
+data_path = "./data.h5"
 
 data = h5py.File(data_path, 'r')
 
