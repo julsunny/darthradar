@@ -37,7 +37,6 @@ labels
 |-- ...
 </pre>
 
-**(xmin, ymin)** and **(xmax, ymax)** are the target boundary box coordinates on the range-Doppler map. **class_type** is the type of object detected in the boundary box. This can be one of the following:
 
 <pre>
 0: pedestrian
@@ -65,8 +64,19 @@ pip3 install h5py pandas sklearn matplotlib
 
 If `pip` is not installed on your system, you can install it by typing
 ```
-python -m ensurepip
+python3 -m ensurepip
 ```
 
-### Coding Example
+### Coding Examples
+
+#### clf_example.py
+The example `clf_example.py` example reads the range Doppler image (256 x 32 matrix) and converts it to a vector with 8192 elements. This vector is used as feature vector X. The value y we want to learn in this simple example is the number of targets within a certain radar frame. Because of the low amount of potential outcomes this can be seen as classification problem. For demonstration the MLP Classifier of the Sklearn library is used and a confusion matrix is plotted.
+
 Please open the file `clf_example.py` and read the comments to understand how to work with the dataset.
+
+#### plotDopplerMap.py
+This example plots the range Doppler map as colored image and shows positions
+and types of the different labels within this image. This example should help
+to get a better understanding about the dataset.
+
+Since there are a lot of sample this example will run for a while. Please use CTRL-C in the command line (you may need to spam it) to exit the example.

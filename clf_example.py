@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
-This example reads the radar Doppler image (256 x 32 matrix) and converts it to a vector with 8192
+This example reads the range Doppler image (256 x 32 matrix) and converts it to a vector with 8192
 elements. This vector is used as feature vector X. The value y we want to learn in this simple
 example is the number of targets within a certain radar frame. Because of the low amount of
 potential outcomes this can be seen as classification problem. For demonstration the MLP Classifier
@@ -11,7 +11,7 @@ of the Sklearn library is used and a confusion matrix is plotted.
 
 """
 Dependencies: pandas, h5py, sklearn, matplotlib
-install with pip install pandas h5py sklearn matplotlib
+install with: pip3 install pandas h5py sklearn matplotlib
 """
 
 import h5py # Required to read the radar data.
@@ -46,7 +46,10 @@ for idx,element in enumerate(data['rdms']):
             # Add a name for this column.
             column_names.append('rdms-' + str(len(rdms_row)))
     # Calculate the label, the number of targets.
-    number_targets = data['labels'][str(idx)].shape[0]
+    number_targets = 0
+    for target in data['labels'][str(idx)]:
+        # only count target if class is not 3 (no object)
+        if target[4] != 3: number_targets += 1
     # Add the label to the current row (will be separated again later).
     rdms_row.append(number_targets)
     column_names.append('number_targets')
