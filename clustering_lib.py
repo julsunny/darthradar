@@ -76,6 +76,9 @@ class Cluster:
         
         return [x0, y0, x1, y1]
 
+def rel_to_abs_box(pre_box, ref_box):
+    pass
+    
 class DBSCAN():
     """A density based clustering method that expands clusters from 
     samples that have more neighbors within a radius specified by eps
@@ -197,7 +200,12 @@ def refine_box(rdms_raw, pre_box, strength, n_objects = 1, gradient = True, colo
         
         SC = skc.SpectralClustering(affinity = "precomputed", n_clusters = n_objects, **clustering_kwargs)
         
-        SC.fit(graph)
+        try : 
+            SC.fit(graph)
+        except ValueError:
+            print(ValueError)
+            print(type(graph))
+            
         labels = SC.labels_
         
         clusters = [Cluster(height_map(rdms)[labels == l], l) for l in set(labels)]
@@ -217,7 +225,8 @@ def refine_box(rdms_raw, pre_box, strength, n_objects = 1, gradient = True, colo
         clustering = Clustering(clusters)
         
         boxes = clustering.get_boxes()
-        
+    
+    
     return boxes
     
     
