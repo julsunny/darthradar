@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt # Default plotting module for Python.
 import matplotlib.patches as patches
 import scipy.ndimage
 import numpy as np
+from skimage import measure
 
 def detect_peaks(d, tx, ty, gx, gy, rate_fa):
     """
@@ -43,13 +44,35 @@ def cutout_middle_strip(d, cutout_lower, cutout_upper):
     d = np.delete(d, np.arange(cutout_lower,cutout_upper+1), axis=0)
     return d
 
-def return_box_bounds(x, y, halfwidth, halfheight, limits):
+def return_box_bounds(x, y, data, halfwidth, halfheight):
+    """
+
+    :param x: np.ndarray, shape(N_peaks,)
+    :param y: np.ndarray, shape(N_peaks,)
+    :param data: np.ndarray, shape(N_doppler, N_range)
+    :param halfwidth: float
+    :param halfheight: float
+    :return:
+    bounds: np.ndarray, shape(N_peaks,4)
+    """
+
     x0 = np.maximum(x - halfwidth, np.repeat(0, x.shape[0]))
-    x1 = np.minimum(x + halfwidth, np.repeat(limits[0], x.shape[0]))
+    x1 = np.minimum(x + halfwidth, np.repeat(data.shape[0]-1, x.shape[0]))
     y0 = np.maximum(y - halfheight,np.repeat(0, y.shape[0]))
-    y1 = np.minimum(y + halfheight, np.repeat(limits[1], y.shape[0]))
+    y1 = np.minimum(y + halfheight, np.repeat(data.shape[1]-1, y.shape[0]))
 
     bounds = np.stack((x0, y0, x1, y1), axis = 1)
+
+    for b in bounds:
+        image = data[b[0]:b[2], b[1]:b[3]]
+        M =  measure.moments(image)
+        centroid = (M[1, 0] / M[0, 0], M[0, 1] / M[0, 0])
+        MC = measure.moments_central(image, centroid)
+        var = (MC[2,0] / M[0, 0], MC[0,2] / M[0, 0])
+        b[0] = max(b[0], b[0] + centroid[0] - 0.25*var[0])
+        b[1] = max(b[1], b[1] + centroid[1] - 0.25*var[1])
+        b[2] = min(b[2], b[0] + centroid[0] + 0.25*var[0])
+        b[3] = min(b[3], b[1] + centroid[1] + 0.25*var[1])
 
     return bounds
 
@@ -69,7 +92,7 @@ def test_run(delay):
     for idx,dmap in enumerate(data['rdms']):
         ax.clear()
         dmap = cutout_middle_strip(dmap, 122, 134)
-        numpeaks, x, y, strength = detect_peaks(dmap, tx=10, ty=3, gx=2, gy=1, rate_fa=1e-2)
+        numpeaks, x, y, strength = detect_peaks(dmap, tx=10, ty=3, gx=2, gy=1, rate_fa=0.01)
 
         plt.imshow(dmap.T, origin='lower', interpolation='bilinear', cmap='viridis')
         plt.scatter(x,y,color='red')
@@ -81,8 +104,7 @@ def test_run(delay):
             ax.annotate(target_class, (target[3], target[2]), color='w', weight='bold', fontsize=6, ha='left', va='bottom')
             ax.add_patch(rect)
 
-        bounds = return_box_bounds(x,y,11,7,dmap.shape)
-        print(bounds)
+        bounds = return_box_bounds(x,y,dmap,11,7)
         for i in bounds:
             rect = patches.Rectangle((i[0], i[1]), i[2]-i[0]+1, i[3]-i[1]+1, linewidth=1,
                                      edgecolor='y', facecolor='none')
@@ -91,5 +113,3 @@ def test_run(delay):
         plt.title(title)
         plt.draw()
         plt.pause(delay)
-
-test_run(0.5)
