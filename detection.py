@@ -80,16 +80,16 @@ def evaluate_boxes_pair(boxes1, boxes2) -> Union[float, str]:
         return 'mismatched number of boxes'
 
     # match found boxes to labels
-    cost_matrix = np.array([[IOU(label_box, found_box) for label_box in boxes1] for found_box in boxes2])
-    print("cost matrix:\n", cost_matrix)
-    row_indices, col_indices = linear_sum_assignment(cost_matrix, maximize=True)
-    # calculate the sum of the matched pairs' costs
+    goodness_matrix = np.array([[IOU(label_box, found_box) for label_box in boxes1] for found_box in boxes2])
+    print("goodness matrix:\n", goodness_matrix)
+    row_indices, col_indices = linear_sum_assignment(goodness_matrix, maximize=True)
+    # calculate the sum of the matched pairs' goodness
     print("idxs:", row_indices, col_indices)
-    print("cost:", [cost_matrix[row_idx, col_idx] for row_idx, col_idx in zip(row_indices, col_indices)])
-    total_cost = sum(cost_matrix[row_idx, col_idx] for row_idx, col_idx in zip(row_indices, col_indices))
+    print("goodness:", [goodness_matrix[row_idx, col_idx] for row_idx, col_idx in zip(row_indices, col_indices)])
+    total_goodness = sum(goodness_matrix[row_idx, col_idx] for row_idx, col_idx in zip(row_indices, col_indices))
 
-    # return cost per box
-    return total_cost / len(boxes1)
+    # return goodness per box
+    return total_goodness / len(boxes1)
 
 #
 # TESTING CODE, don't use
