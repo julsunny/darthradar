@@ -139,7 +139,6 @@ if __name__ ==  '__main__':
 
     trainer = Trainer(gpus=0,
                       precision=params['PRECISION'],  # try 16 with enable_pl_optimizer=False
-                      callbacks=[checkpoint_callback, learningrate_callback, early_stopping_callback],
                       default_root_dir=params["CHECKPOINT"],  # where checkpoints are saved to
                       log_every_n_steps=1,
                       num_sanity_val_steps=0,
