@@ -195,7 +195,7 @@ def refine_box(rdms_raw, pre_box, strength, n_objects = 1, gradient = True, colo
         graph = image.img_to_graph(rdms)
         graph.data = np.exp(-graph.data)
         
-        SC = skc.SpectralClustering(affinity = "precomputed", n_clusters = n_objects**clustering_kwargs)
+        SC = skc.SpectralClustering(affinity = "precomputed", n_clusters = n_objects, **clustering_kwargs)
         
         SC.fit(graph)
         labels = SC.labels_
