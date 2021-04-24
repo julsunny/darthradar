@@ -1,2 +1,4 @@
 .idea
 __pycache__/
+doppler_data.npy
+label_data.pkl
