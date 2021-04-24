@@ -48,16 +48,18 @@ class RadarDetectionDataSet(Dataset):
 
     def read_doppler(self, inp, tar):
         im = self.input_images[inp, :, :]
+        im = im.T
+        im = im.reshape(1, im.shape[0], im.shape[1])
         try:
             tar = self.target_dicts[str(tar)]
         except:
-            tar = {"boxes": np.array([]), "labels": np.array([])}
+            tar = {"boxes": np.array([0, 0, im.shape[0], im.shape[1]]).reshape(1,4), "labels": np.array([0])}
         return im, tar
 
     def __len__(self):
         return len(self.inputs)
 
-    def map_class_to_int(self,labels):
+    def map_class_to_int(self, labels):
         translation = {0: 1, 1: 2, 2: 3, 3: 4}
         new_list = [translation[l] for l in labels]
         return np.array(new_list)

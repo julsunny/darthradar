@@ -21,8 +21,8 @@ if __name__ ==  '__main__':
               'SEED': 42,
               'PROJECT': 'Heads',
               'EXPERIMENT': 'heads',
-              'MAXEPOCHS': 500,
-              'BACKBONE': 'resnet34',
+              'MAXEPOCHS': 10,
+              'BACKBONE': 'resnet18',
               'FPN': False,
               'ANCHOR_SIZE': ((32, 64, 128, 256, 512),),
               'ASPECT_RATIOS': ((0.5, 1.0, 2.0),),
@@ -151,6 +151,7 @@ if __name__ ==  '__main__':
     trainer.fit(task,
                 train_dataloader=dataloader_train,
                 val_dataloaders=dataloader_valid)
+
 
     trainer.test(ckpt_path='best', test_dataloaders=dataloader_test)
 

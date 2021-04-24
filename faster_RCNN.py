@@ -149,8 +149,12 @@ class FasterRCNN_lightning(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         # Batch
         x, y, x_name, y_name = batch  # tuple unpacking
-
+        print("training one batch!")
+        #try:
         loss_dict = self.model(x, y)
+        #except:
+        #    import ipdb; ipdb.set_trace()
+
         loss = sum(loss for loss in loss_dict.values())
 
         self.log_dict(loss_dict)
