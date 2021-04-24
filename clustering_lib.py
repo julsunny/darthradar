@@ -182,7 +182,7 @@ class DBSCAN():
         return cluster_labels
 #%%
 
-def refine_box(rdms_raw, pre_box, strength, n_objects = 1, gradient = True, color_scaling = None, clustering_kwargs = {}):
+def refine_box(rdms_raw, pre_box, strength, n_objects = 1, gradient = True, color_scaling = None, clustering_kwargs = {eigen_solver : "arpack", n_jobs : -1}):
     #make copy of image
     rdms = rdms_raw[pre_box[0]:pre_box[2], pre_box[1]:pre_box[3]].copy()
     
@@ -195,12 +195,25 @@ def refine_box(rdms_raw, pre_box, strength, n_objects = 1, gradient = True, colo
         graph = image.img_to_graph(rdms)
         graph.data = np.exp(-graph.data)
         
-        SC = skc.SpectralClustering(affinity = "precomputed", n_clusters = n_objects, eigen_solver='arpack', **clustering_kwargs)
+        SC = skc.SpectralClustering(affinity = "precomputed", n_clusters = n_objects**clustering_kwargs)
         
         SC.fit(graph)
         labels = SC.labels_
         
         clusters = [Cluster(height_map(rdms)[labels == l], l) for l in set(labels)]
+        clustering = Clustering(clusters)
+        
+        boxes = clustering.get_boxes()
+    
+    else:
+        fmt_rdms = fm_t_data(rdms, color_scaling = color_scaling)
+        
+        SC = skc.SpectralClustering(n_clusters = n_objects, **clustering_kwargs)
+    
+        SC.fit(fmt_rdms)
+        labels = SC.labels_
+        
+        clusters = [Cluster(fmt_rdms[labels == l], l) for l in set(labels)]
         clustering = Clustering(clusters)
         
         boxes = clustering.get_boxes()
