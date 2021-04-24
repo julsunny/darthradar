@@ -10,7 +10,7 @@ from scipy.optimize import linear_sum_assignment
 from dataloader import RadarImageTargetSet
 
 # type alias for boxes
-Box = numpy.ndarray
+Box = np.ndarray
 
 def IOU(box1: Box, box2: Box) -> float:
     """IOU = Area of Union / Area of Intersection
