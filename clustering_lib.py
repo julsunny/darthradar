@@ -182,7 +182,7 @@ class DBSCAN():
         return cluster_labels
 #%%
 
-def refine_box(rdms_raw, pre_box, strength, n_objects = 1, gradient = True, color_scaling = None, clustering_kwargs = {eigen_solver : "arpack", n_jobs : -1}):
+def refine_box(rdms_raw, pre_box, strength, n_objects = 1, gradient = True, color_scaling = None, clustering_kwargs = {"eigen_solver" : "arpack", "n_jobs" : -1}):
     #make copy of image
     rdms = rdms_raw[pre_box[0]:pre_box[2], pre_box[1]:pre_box[3]].copy()
     
