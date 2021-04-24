@@ -50,6 +50,7 @@ class RadarDetectionDataSet(Dataset):
         im = self.input_images[inp, :, :]
         im = im.T
         im = im.reshape(1, im.shape[0], im.shape[1])
+        im = np.concatenate((im,im,im),axis=0)          # fake an RGB image
         try:
             tar = self.target_dicts[str(tar)]
         except:
