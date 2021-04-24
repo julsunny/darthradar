@@ -56,26 +56,7 @@ classes = {
     '3' : 'no object'
     }
 
-#%%
-filt = [0,1,2,3,4,5]
-ncols = 3
-nrows = round(len(filt)/ncols + 0.5)
 
-fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize = (ncols*3.5 + 2, nrows*1.5), dpi = 600)
-ax_ref = axs.flatten()
-
-for idx,dmap in enumerate(data['rdms'][filt]):
-    #change cmap and v_range here
-    dmap[126:131,:]=0
-    ax_ref[idx].imshow(dmap.T, origin='lower', interpolation='bilinear', cmap='gist_ncar', vmin = 500, vmax = 6000) 
-    
-    for target in data['labels'][str(idx)]:
-        rect = patches.Rectangle((target[1], target[0]), target[3]-target[1], target[2]-target[0], linewidth=1, edgecolor='pink', facecolor='none')
-        target_class = classes[str(int(target[4]))]
-        ax_ref[idx].annotate(target_class, (target[3], target[2]), color='w', weight='bold', fontsize=5, ha='left', va='bottom')
-        ax_ref[idx].add_patch(rect)
-
-#%%
 filt = np.asarray([0,1,2,3,4,5,6,7,8])+200
 ncols = 3
 nrows = round(len(filt)/ncols)
