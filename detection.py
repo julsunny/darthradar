@@ -76,6 +76,10 @@ def evalute_box_finder(peak_detector, data_set: RadarImageTargetSet):
 
 def evaluate_boxes_pair(boxes1, boxes2) -> Union[float, str]:
     """Evaluate a pair of box labels"""
+    if len(boxes1) == 0 and len(boxes2) == 0:
+        # best possible goodness
+        return 1
+
     if len(boxes1) != len(boxes2):
         return 'mismatched number of boxes'
 
