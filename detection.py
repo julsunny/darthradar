@@ -4,12 +4,13 @@ Detection of regions of interests in the radar doppler maps
 
 from typing import Union, Dict
 
-import h5py
-import torch
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
-Box = torch.Tensor
+from dataloader import RadarImageTargetSet
+
+# type alias for boxes
+Box = numpy.ndarray
 
 def IOU(box1: Box, box2: Box) -> float:
     """IOU = Area of Union / Area of Intersection
@@ -43,7 +44,8 @@ def IOU(box1: Box, box2: Box) -> float:
     return I / U
 
 
-def evalute_box_finder(peak_detector, data_set: torch.utils.data.Dataset):
+
+def evalute_box_finder(peak_detector, data_set: RadarImageTargetSet):
     """
     Evaluates performance of a peak detector on a dataset.
 
@@ -63,7 +65,8 @@ def evalute_box_finder(peak_detector, data_set: torch.utils.data.Dataset):
     assert len(data_set) > 0
     assert isinstance(data_set[0][0], np.ndarray)
     assert all(key in data_set[0][1] for key in ['boxes', 'labels', 'image_id', 'area'])
-    assert isinstance(data_set[0][1]['boxes'], torch.Tensor)
+    assert isinstance(data_set[0][1]['boxes'], np.ndarray)
+    assert data_set[0][1]['boxes'].shape[1] == 4
     # some more asserts maybe?
 
     box_errors: Dict[int, Union[float, str]] = dict()
