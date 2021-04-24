@@ -14,22 +14,22 @@ from transformations import normalize_01, normalize
 from utils import collate_double
 
 if __name__ ==  '__main__':
-    params = {'BATCH_SIZE': 2,
+    params = {'BATCH_SIZE': 1,
               'LR': 0.001,
               'PRECISION': 32,
-              'CLASSES': 2,
+              'CLASSES': 5,
               'SEED': 42,
               'PROJECT': 'Heads',
               'EXPERIMENT': 'heads',
               'MAXEPOCHS': 10,
               'BACKBONE': 'resnet18',
               'FPN': False,
-              'ANCHOR_SIZE': ((32, 64, 128, 256, 512),),
+              'ANCHOR_SIZE': ((2, 4, 8, 16, 32),),
               'ASPECT_RATIOS': ((0.5, 1.0, 2.0),),
               'MIN_SIZE': 1024,
               'MAX_SIZE': 1024,
-              'IMG_MEAN': [0.485, 0.456, 0.406],
-              'IMG_STD': [0.229, 0.224, 0.225],
+              'IMG_MEAN': [0., 0., 0.],
+              'IMG_STD': [1., 1., 1.],
               'IOU_THRESHOLD': 0.5,
               'CHECKPOINT': 'results_resnet'
               }
@@ -93,21 +93,21 @@ if __name__ ==  '__main__':
     dataloader_train = DataLoader(dataset=dataset_train,
                                   batch_size=params['BATCH_SIZE'],
                                   shuffle=True,
-                                  num_workers=0,
+                                  num_workers=8,
                                   collate_fn=collate_double)
 
     # dataloader validation
     dataloader_valid = DataLoader(dataset=dataset_valid,
                                   batch_size=1,
                                   shuffle=False,
-                                  num_workers=0,
+                                  num_workers=8,
                                   collate_fn=collate_double)
 
     # dataloader test
     dataloader_test = DataLoader(dataset=dataset_test,
                                  batch_size=1,
                                  shuffle=False,
-                                 num_workers=0,
+                                 num_workers=8,
                                  collate_fn=collate_double)
 
     print("-----------------done creating datasets!-----------------")
