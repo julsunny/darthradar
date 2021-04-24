@@ -4,6 +4,13 @@ import torch
 import pickle
 
 def generate_dataset():
+    '''
+    Receives data in hdf5 format, returns doppler maps as numpy array (number maps x width x height) and targets
+    (dictionary with keys 0 to 375 (datapoint index)). Each targets[index] is a dictionary with keys "boxes" and "labels".
+    :return:
+    imgs (numpy array)
+    targets (dict)
+    '''
     data = h5py.File('data.h5', 'r')
     imgs = [data['rdms'][index][()] for index in range(len(data['rdms']))]
     imgs = np.array(imgs)
@@ -14,11 +21,6 @@ def generate_dataset():
             targets[str(index)] = {}
             targets[str(index)]["boxes"] = data["labels"][str(index)][()][:, :4]
             targets[str(index)]["labels"] = data["labels"][str(index)][()][:, 4]
-    np.save("doppler_data.npy", imgs)
-    f = open("label_data.pkl", "wb")
-    pickle.dump(targets, f)
-    f.close()
 
-    return
+    return imgs, targets
 
-generate_dataset()
