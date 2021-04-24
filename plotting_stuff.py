@@ -12,10 +12,10 @@ def plot_rdms(rdms, target, ax, cmap = "gist_ncar", v_range = (500, 6000)):
 
     Parameters
     ----------
-    rdms : TYPE
-        DESCRIPTION.
-    target : TYPE
-        DESCRIPTION.
+    rdms : 2d numpy array or 2d torch tensor
+        the radar doppler image
+    target : dictionary
+        target['boxes'] is a numpy (N, 4) array or a torch.FloatTensor[N, 4] where N is the number of boxes
     ax : TYPE
         DESCRIPTION.
     cmap : TYPE, optional
@@ -36,11 +36,11 @@ def plot_rdms(rdms, target, ax, cmap = "gist_ncar", v_range = (500, 6000)):
     '4' : 'no object'
     }
     
-    ax.imshow(rdms.T.numpy(), origin = 'lower', interpolation = 'bilinear', cmap = cmap, vmin = v_range[0], vmax = v_range[6000])
+    ax.imshow(rdms.T[()], origin = 'lower', interpolation = 'bilinear', cmap = cmap, vmin = v_range[0], vmax = v_range[1])
     for idx, box_t in enumerate(target["boxes"]):
-        box = box_t.numpy()
+        box = box_t[()] # convert torch to numpy array or do nothing if it's already a numpy array
         rect = patches.Rectangle((box[1], box[0]), box[3] - box[1], box[2] - box[0], linewidth = 1, edgecolor = 'pink', facecolor = 'none')
-        box_class = classes[str(int(target["labels"][4]))]
+        box_class = classes[str(int(target["labels"]))]
         ax.annotate(box_class, (box[3], box[2]), color = 'w', weight = 'bold', fontsize = 5, ha = 'left', va = 'bottom')
         ax.add_patch(rect)
         
@@ -50,7 +50,7 @@ def grid_plot(samples, ncols = 3, cmap = "gist_ncar", v_range = (500, 6000)):
 
     Parameters
     ----------
-    samples : TYPE
+    samples : (image, target) pair
         DESCRIPTION.
     ncols : TYPE, optional
         DESCRIPTION. The default is 3.
@@ -74,7 +74,7 @@ def grid_plot(samples, ncols = 3, cmap = "gist_ncar", v_range = (500, 6000)):
         
 #%%       
 
-data_path = "M:/programming/projects/TUM_Hackathon_Infineon_Radar_Challenge/darthradar/data.h5"
+data_path = "./data.h5"
 
 data = h5py.File(data_path, 'r')
 
