@@ -115,6 +115,44 @@ class RadarDetectionDataSet(Dataset):
         return {'x': x, 'y': target, 'x_name': '', 'y_name': ''}
 
 
+class RadarImageTargetSet():
+    """
+    WARNING:
+    run preprocessing before using:
+        > python preprocessing.py
+
+    Images are stored as numpy arrays.
+    Target dictionaries have format: {
+        'boxes'  : (N, 4) numpy array
+        'labels' : (N,) numpy array
+    }
+        
+    __getitem__ Returns a tuple consisting of an image and a target dictionary.
+    
+    Example:
+        ds = RadarImageTargetSet()
+        ds[17][0] # image: 2d numpy array
+        ds[17][1] # target dictionary
+    """
+
+    def __init__(self):
+        self.input_images = np.load("doppler_data.npy")
+        with open("label_data.pkl","rb") as f:
+            self.target_dicts = pickle.load(f)
+
+    def __getitem__(self, index: int):
+        """Read image and target-dict given indexes"""
+        image = self.input_images[index, :, :]
+        try:
+            target = self.target_dicts[str(index)]
+        except:
+            target = {"boxes": np.array([]), "labels": np.array([])}
+        return image, target
+
+    def __len__(self):
+        return len(self.input_images)
+
+
 def get_img_tgt_tuple_by_id(id: int):
     ds = RadarDetectionDataSet()
     return (ds[0]['x'], ds[0]['y'])
