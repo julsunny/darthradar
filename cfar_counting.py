@@ -23,49 +23,53 @@ from sklearn.metrics import accuracy_score as accuracy # Our evaluation metric f
 from sklearn.metrics import plot_confusion_matrix # Module for plotting the confusion matrix.
 import matplotlib.pyplot as plt # Default plotting module for Python.
 import numpy as np
-import scipy.ndimage
+from peakDetection import *
 
 # Read the radar data into a variable.
 data = h5py.File('data.h5', 'r')
-X = data['rdms']
-y = data['labels']
-# Split X and y into training and testing data each.
-# Normalize X
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+X = []
+y = []
 
-# Predict values with the trained model.
-y_pred_cfar = np.zeros(y_test.shape)
+for idx,element in enumerate(data['rdms']):
+    X.append(data['rdms'][idx])
+    number_targets = 0
+    for target in data['labels'][str(idx)]:
+        if target[4] != 3: number_targets += 1
+    y.append(number_targets)
 
-cutout_lower = 126
-cutout_upper = 130
-i = 0
-for dmap in X_test.to_numpy():
-    dmap = dmap.reshape(256,32)
-    dmap = np.delete(dmap, np.arange(cutout_lower, cutout_upper + 1), axis=0)
-    #plt.imshow(dmap.T, origin='lower', interpolation='bilinear', cmap='viridis')  # , aspect=256/32*0.5)
-    #plt.draw()
-    peaks = detect_peaks(dmap, tx=10, ty=3, gx=2, gy=1, rate_fa=1e-3)
-    x, y = np.argwhere(peaks == 1).T
-    plt.scatter(x, y, color='red')
-    y_pred_cfar[i] = x.size
-    i+=1
-    #plt.pause(0.5)
-    #plt.clf()
+X_test = np.array(X)
+y_test = np.array(y)
 
-print(y_pred_cfar)
-print(y_pred_cfar.shape)
-#Prepare the classifier.
-#model = MLPClassifier(solver='lbfgs', max_iter=1000)
+y_pred = np.zeros(y_test.shape)
 
-# Train the classifier (might take some minutes).
-#print("Start training...")
-#model.fit(X_train, y_train)
+tx_range = np.arange(10,11)
+ty_range = np.arange(3,4)
+gx_range = np.arange(2,3)
+gy_range = np.arange(1,2)
+rate_fa_range = np.logspace(-4, -0.5, 20)
 
-# Evaluate the prediction performance using the accuracy metric and print the result.
-#score1 = accuracy(y_test, y_pred_nn)
-#print(score1)
-score2 = accuracy(y_test, y_pred_cfar)
-print(score2)
+maxscore = 0
+argmax = []
+for tx in tx_range:
+    print("tx = ", tx)
+    for ty in ty_range:
+        for gx in gx_range:
+            for gy in gy_range:
+                for rate_fa in rate_fa_range:
+                    i = 0
+                    y_pred = np.zeros(y_test.shape)
+                    for dmap in X_test:
+                        dmap = cutout_middle_strip(dmap, 120, 136)
+                        numpeaks, x, y, strength = detect_peaks(dmap, tx, ty, gx, gy, rate_fa)
+                        y_pred[i] = numpeaks
+                        i += 1
+                    score = accuracy(y_test, y_pred)
+                    if score > maxscore:
+                        maxscore = score
+                        argmax = [tx, ty, gx, gy, rate_fa]
+
+print(maxscore)
+print(argmax)
 
 # Plot the confusion matrix.
 #plot_confusion_matrix(model, X_test, y_test)
