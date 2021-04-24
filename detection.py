@@ -12,27 +12,36 @@ from scipy.optimize import linear_sum_assignment
 Box = torch.Tensor
 
 def IOU(box1: Box, box2: Box) -> float:
-    """IOU = Area of Union / Area of Intersection"""
-    # WARNING this function uses lower left corner, width, height to define a box
-    x0, y0, x1, y1 = box1
-    x1, y1, w1, h1 = x0, y0, x1 - x0, y1 - y0
+    """IOU = Area of Union / Area of Intersection
+    
+    Returns:
+    --------
+        int: The quality of the match
+            1 in case of a perfect match
+            0 in case of no overlap of boxes
+    """
 
-    x0, y0, x1, y1 = box2
-    x2, y2, w2, h2 = x0, y0, x1 - x0, y1 - y0
+    if len(box1) == 5:
+        box1 = box1[:-1]
+    if len(box2) == 5:
+        box2 = box2[:-1]
 
-    w_intersection = min(x1 + w1, x2 + w2) - max(x1, x2)
+    # calculate intersection area
+    axmin, aymin, axmax, aymax = box1
+    bxmin, bymin, bxmax, bymax = box2
 
-    h_intersection = min(y1 + h1, y2 + h2) - max(y1, y2)
-
-    if w_intersection <= 0 or h_intersection <= 0: 
-        # area of intersection is 0 -> cost is infinite
-        return float('inf')
-
-    I = w_intersection * h_intersection
-
-    U = w1 * h1 + w2 * h2 - I 
+    dx = min(axmax, bxmax) - max(axmin, bxmin)
+    dy = min(aymax, bymax) - max(aymin, bymin)
+    if (dx>=0) and (dy>=0):
+        I = dx*dy
+    else:
+        return 0
+    
+    # union = area1 + area2 - intersection
+    U =  (axmax - axmin) * (aymax - aymin) + (bxmax - bxmin) * (bymax - bymin) - I 
 
     return I / U
+
 
 def evalute_box_finder(peak_detector, data_set: torch.utils.data.Dataset):
     """
@@ -60,15 +69,30 @@ def evalute_box_finder(peak_detector, data_set: torch.utils.data.Dataset):
     box_errors: Dict[int, Union[float, str]] = dict()
     for (img, tgt) in data_set:
         found_boxes = peak_detector(img)
+        evaluate_boxes_pair(found_boxes, tgt['boxes'])
 
-        if len(found_boxes) != len(tgt['boxes']):
-            box_errors[tgt['image_id']] = 'mismatched number of boxes'
-        
-        # match found boxes to labels
-        cost_matrix = np.array([[IOU(label_box, found_box) for label_box in tgt['boxes']] for found_box in found_boxes])
-        row_indices, col_indices = linear_sum_assignment(cost_matrix)
-        # calculate the sum of the matched pairs' costs
-        total_cost = sum(cost_matrix[row_idx, col_idx] for row_idx, col_idx in zip(row_indices, col_indices))
-        box_errors[tgt['image_id']] = total_cost
+def evaluate_boxes_pair(boxes1, boxes2) -> Union[float, str]:
+    """Evaluate a pair of box labels"""
+    if len(boxes1) != len(boxes2):
+        return 'mismatched number of boxes'
 
-#iou = [IOU(y_test[i], y_pred[i]) for i in range(len(x_test))]
+    # match found boxes to labels
+    cost_matrix = np.array([[IOU(label_box, found_box) for label_box in boxes1] for found_box in boxes2])
+    print("cost matrix:\n", cost_matrix)
+    row_indices, col_indices = linear_sum_assignment(cost_matrix, maximize=True)
+    # calculate the sum of the matched pairs' costs
+    print("idxs:", row_indices, col_indices)
+    print("cost:", [cost_matrix[row_idx, col_idx] for row_idx, col_idx in zip(row_indices, col_indices)])
+    total_cost = sum(cost_matrix[row_idx, col_idx] for row_idx, col_idx in zip(row_indices, col_indices))
+
+    # return cost per box
+    return total_cost / len(boxes1)
+
+#
+# TESTING CODE, don't use
+#
+
+def test_evaluate_boxes_trivial():
+    """Test the evaluate_box_function by giving it the same set of boxes twice""" 
+    test_boxes = np.array([[  5., 110.,  10., 116.,   2.], [  4., 108.,  12., 116.,   2.]])
+    assert np.isclose(1., evaluate_boxes_pair(test_boxes, test_boxes))

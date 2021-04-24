@@ -22,13 +22,15 @@ class RadarDetectionDataSet(Dataset):
     """
 
     def __init__(self,
+                 input_start = 0,
+                 input_stop = 375,
                  use_cache: bool = False,
                  convert_to_format: str = None,
                  mapping: bool = True,
                  transform: ComposeDouble = None,
                  ):
-        self.inputs = range(375)
-        self.targets = range(375)
+        self.inputs = range(input_start,input_stop)
+        self.targets = range(input_start,input_stop)
         self.input_images = np.load("doppler_data.npy")
         with open("label_data.pkl","rb") as f:
             self.target_dicts = pickle.load(f)
@@ -36,6 +38,7 @@ class RadarDetectionDataSet(Dataset):
         self.use_cache = use_cache
         self.convert_to_format = convert_to_format
         self.mapping = mapping
+        self.transform = transform
 
         if self.use_cache:
             # Use multiprocessing to load images and targets into RAM
@@ -45,7 +48,10 @@ class RadarDetectionDataSet(Dataset):
 
     def read_doppler(self, inp, tar):
         im = self.input_images[inp, :, :]
-        tar = self.target_dicts[str(tar)]
+        try:
+            tar = self.target_dicts[str(tar)]
+        except:
+            tar = {"boxes": np.array([]), "labels": np.array([])}
         return im, tar
 
     def __len__(self):
@@ -108,3 +114,11 @@ class RadarDetectionDataSet(Dataset):
 
         return {'x': x, 'y': target, 'x_name': '', 'y_name': ''}
 
+
+def get_img_tgt_tuple_by_id(id: int):
+    ds = RadarDetectionDataSet()
+    return (ds[0]['x'], ds[0]['y'])
+    #images = np.load("doppler_data.npy")
+    #with open("label_data.pkl","rb") as f:
+    #    target_dicts = pickle.load(f)
+    #return (images[id], target_dicts[str(id)])
