@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
-import torch 
 import h5py
 
 #%%
@@ -35,15 +33,22 @@ def plot_rdms(rdms, target, ax, cmap = "gist_ncar", v_range = (500, 6000)):
     '3' : 'truck',
     '4' : 'no object'
     }
-    
+    print(target["refined_boxes"])
     ax.imshow(rdms.T[()], origin = 'lower', interpolation = 'bilinear', cmap = cmap, vmin = v_range[0], vmax = v_range[1])
-    for idx, box_t in enumerate(target["boxes"]):
-        box = box_t[()] # convert torch to numpy array or do nothing if it's already a numpy array
+    #plot predicted boxes
+    for idx, box in enumerate(target["refined_boxes"]):
+        rect = patches.Rectangle((box[1], box[0]), box[3] - box[1], box[2] - box[0], linewidth = 2, edgecolor = 'red', facecolor = 'none')
+        ax.add_patch(rect)
+        #box_class = classes[str(int(target["labels"][idx]))]
+        #ax.annotate(box_class, (box[3], box[2]), color = 'w', weight = 'bold', fontsize = 5, ha = 'left', va = 'bottom')
+    
+    #draw prelabeled boxes
+    for idx, box in enumerate(target["boxes"]):
         rect = patches.Rectangle((box[1], box[0]), box[3] - box[1], box[2] - box[0], linewidth = 1, edgecolor = 'pink', facecolor = 'none')
-        box_class = classes[str(int(target["labels"]))]
+        box_class = classes[str(int(target["labels"][idx]))]
         ax.annotate(box_class, (box[3], box[2]), color = 'w', weight = 'bold', fontsize = 5, ha = 'left', va = 'bottom')
         ax.add_patch(rect)
-        
+   
 def grid_plot(samples, ncols = 3, cmap = "gist_ncar", v_range = (500, 6000)):
     """
     High level function for plotting samples on a grid with ncols. 
@@ -65,15 +70,14 @@ def grid_plot(samples, ncols = 3, cmap = "gist_ncar", v_range = (500, 6000)):
 
     """
     
-    nrows = round(len(samples)/ncols + 0.5)
-    fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize = (ncols*3.5, nrows*1.5), dpi = 600)
+    nrows = round(len(samples)/ncols)
+    fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize = (ncols*3.5, nrows*1.5), dpi = 400)
     ax_ref = axs.flatten()
-    
     for i, sample in enumerate(samples): #sample = (rdms, target)
-        plot_rdms(*sample, ax_ref[i], cmap, v_range)
+        plot_rdms(sample[0], sample[1], ax_ref[i], cmap, v_range)
         
 #%%       
-
+"""
 data_path = "./data.h5"
 
 data = h5py.File(data_path, 'r')
@@ -103,3 +107,4 @@ for idx,dmap in enumerate(data['rdms'][filt]):
         target_class = classes[str(int(target[4]))]
         ax_ref[idx].annotate(target_class, (target[3], target[2]), color='w', weight='bold', fontsize=5, ha='left', va='bottom')
         ax_ref[idx].add_patch(rect)
+"""
