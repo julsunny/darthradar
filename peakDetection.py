@@ -4,7 +4,8 @@ import matplotlib.patches as patches
 import scipy.ndimage
 import numpy as np
 from skimage import measure
-
+STANDARD_BOXSIZE_X = 11
+STANDARD_BOXSIZE_Y = 7
 def detect_peaks(d, tx, ty, gx, gy, rate_fa):
     """
     :param d: radar image – numpy.ndarray, shape(N_doppler, N_range)
@@ -21,7 +22,7 @@ def detect_peaks(d, tx, ty, gx, gy, rate_fa):
 
     For example usage, see test_run
     """
-    d = scipy.ndimage.gaussian_filter(d, sigma=(1,0.25))
+    d = scipy.ndimage.gaussian_filter(d, sigma=(5,1))
     n_train = 4*tx*ty + 2*tx*(2*gy+1) + 2*ty*(2*gx+1)
     alpha = n_train * (rate_fa**(-1/n_train) - 1) #threshold factor
 
@@ -46,7 +47,6 @@ def cutout_middle_strip(d, cutout_lower, cutout_upper):
 
 def return_box_bounds(x, y, data, halfwidth, halfheight):
     """
-
     :param x: np.ndarray, shape(N_peaks,)
     :param y: np.ndarray, shape(N_peaks,)
     :param data: np.ndarray, shape(N_doppler, N_range)
@@ -76,40 +76,36 @@ def return_box_bounds(x, y, data, halfwidth, halfheight):
 
     return bounds
 
-def test_run(delay):
-    # Read the radar data into a variable.
-    data = h5py.File('data.h5', 'r')
+def return_static_box_bounds(x, y, data, halfwidth, halfheight):
 
-    classes = {
-        '0': 'pedestrian',
-        '1': 'car',
-        '2': 'truck',
-        '3': 'no object'
-    }
+    x0 = np.maximum(x - halfwidth, np.repeat(0, x.shape[0]))
+    x1 = np.minimum(x + halfwidth, np.repeat(data.shape[0] - 1, x.shape[0]))
+    y0 = np.maximum(y - halfheight, np.repeat(0, y.shape[0]))
+    y1 = np.minimum(y + halfheight, np.repeat(data.shape[1] - 1, y.shape[0]))
 
-    fig, ax = plt.subplots()
+    bounds = np.stack((x0, y0, x1, y1), axis=1)
 
-    for idx,dmap in enumerate(data['rdms']):
-        ax.clear()
-        dmap = cutout_middle_strip(dmap, 122, 134)
-        numpeaks, x, y, strength = detect_peaks(dmap, tx=10, ty=3, gx=2, gy=1, rate_fa=0.01)
+    return bounds
 
-        plt.imshow(dmap.T, origin='lower', interpolation='bilinear', cmap='viridis')
-        plt.scatter(x,y,color='red')
-        title = '# Peaks: ' + str(numpeaks)
+def return_box_stats(data, bounds):
+    box_stats = []
+    for b in bounds:
+        image = data[b[0]:b[2], b[1]:b[3]]
+        norm = measure.moments(image)[0,0]
+        if np.isclose(norm, 0):
+            stats = measure.moments(image, order = 3).flatten()
+        else:
+            stats = (measure.moments_central(image, order = 3)/norm).flatten()
+        stats = np.append(stats, 0.5*(b[0]+b[2]))
+        stats = np.append(stats, 0.5*(b[1]+b[3]))
+        stats = np.append(stats, np.mean(image))
+        stats = np.append(stats, np.var(image))
+        box_stats.append(stats)
 
-        for target in data['labels'][str(idx)]:
-            rect = patches.Rectangle((target[1], target[0]), target[2]-target[0], target[3]-target[1], linewidth=1, edgecolor='b', facecolor='none')
-            target_class = classes[str(int(target[4]))]
-            ax.annotate(target_class, (target[3], target[2]), color='w', weight='bold', fontsize=6, ha='left', va='bottom')
-            ax.add_patch(rect)
+    return box_stats
 
-        bounds = return_box_bounds(x,y,dmap,11,7)
-        for i in bounds:
-            rect = patches.Rectangle((i[0], i[1]), i[2]-i[0]+1, i[3]-i[1]+1, linewidth=1,
-                                     edgecolor='y', facecolor='none')
-            ax.add_patch(rect)
-
-        plt.title(title)
-        plt.draw()
-        plt.pause(delay)
+def bounds_overlap(b1, b2):
+    width = 2*STANDARD_BOXSIZE_X+1
+    height = 2*STANDARD_BOXSIZE_Y+1
+    overlap = max((width - 2*abs(b1[0]-b2[0])) * (height - 2*abs(b1[1]-b2[1])), 0)
+    return ( overlap / (2*width*height - overlap) > 0.5)
