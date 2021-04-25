@@ -53,15 +53,10 @@ for (img, tgt) in ds:
             continue
         c.append([0.5 * (x0 + x1), 0.5 * (y0 + y1)])
         # cut box out of image
-        #print(class_type)
-        #print(x0, y0, x1, y1)
         cutout = img[int(x0):int(x1), int(y0):int(y1)]
-        #print(cutout.shape)
         if cutout.shape[0] > INPUT_X_SIZE and cutout.shape[1] > INPUT_Y_SIZE:
             print("can't process box of shape", x0, y0, x1, y1, cutout.shape)
             continue
-        # padding putting it in upper left corner
-        # TODO: center
         y_padding = int(INPUT_Y_SIZE - cutout.shape[0])
         x_padding = int(INPUT_X_SIZE - cutout.shape[1])
         padded = np.pad(cutout, ((y_padding // 2, y_padding - (y_padding // 2)), (x_padding // 2, x_padding - (x_padding // 2))), mode='constant', constant_values=0.0)
