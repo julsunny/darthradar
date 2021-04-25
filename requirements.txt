@@ -1,10 +1,10 @@
 opencv_python==4.5.1.48
 h5py==2.10.0
-torch==1.3.1
-numpy==1.19.2
-torchvision==0.4.2
-pandas==1.2.4
-albumentations==0.5.2
+torch
+numpy
+torchvision
+pandas
+albumentations
 scipy==1.6.2
 matplotlib==3.1.2
 ipython==7.22.0
