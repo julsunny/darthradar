@@ -100,9 +100,17 @@ def test_model_endtoend(model, stats_test, labels_test):
             for b in range(len(bounds)):
                 overlap_matrix[l,b] = bounds_overlap(val[l][1], bounds[b])
 
+        # Specify performance metric based on the overlap matrix
+        # (note that other semantically meaningful metrics exist)
+
+        # Go through the overlap matrix line by line (lines correspond to ground-truth boxes)
         for l in range(len(val)):
             already_matched = False
             ones_encountered = False
+            # Go through the columns for this line. If a predicted box has been matched to
+            # the ground-truth box anc classified correctly, all following predicted boxes that are also matched
+            # are declared false positives (regardless of classification result)
+            # If no predicted box is matched to the ground-truth box, this is a false negative.
             for b in range(len(bounds)):
                 if (overlap_matrix[l, b] == 1):
                     ones_encountered = True
@@ -118,6 +126,8 @@ def test_model_endtoend(model, stats_test, labels_test):
             if ones_encountered == False:
                 false_neg += 1
 
+        # Finally, check whether any labeled boxes are not matched to any ground-truth box. Those
+        # are also false positives.
         for b in range(len(bounds)):
             not_matched = True
             for b in range(len(bounds)):

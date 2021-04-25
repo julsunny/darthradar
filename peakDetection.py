@@ -19,9 +19,9 @@ def detect_peaks(d, tx, ty, gx, gy, rate_fa):
     x: x coordinates of peaks – numpy.ndarray, shape(N_peaks,)
     y: y coordinates of peaks – numpy.ndarray, shape(N_peaks,)
     strength: strengths of peaks –numpy.ndarray, shape(N_peaks,)
-
-    For example usage, see test_run
     """
+
+    # This implements cell-averaging CFAR in 2 dimensions, using boolean filters
     d = scipy.ndimage.gaussian_filter(d, sigma=(5,1))
     n_train = 4*tx*ty + 2*tx*(2*gy+1) + 2*ty*(2*gx+1)
     alpha = n_train * (rate_fa**(-1/n_train) - 1) #threshold factor
@@ -56,6 +56,8 @@ def return_box_bounds(x, y, data, halfwidth, halfheight):
     bounds: np.ndarray, shape(N_peaks,4)
     """
 
+    # Return box bounds that are adapted to the image statistics
+
     x0 = np.maximum(x - halfwidth, np.repeat(0, x.shape[0]))
     x1 = np.minimum(x + halfwidth, np.repeat(data.shape[0]-1, x.shape[0]))
     y0 = np.maximum(y - halfheight,np.repeat(0, y.shape[0]))
@@ -78,6 +80,8 @@ def return_box_bounds(x, y, data, halfwidth, halfheight):
 
 def return_static_box_bounds(x, y, data, halfwidth, halfheight):
 
+    # Return uniformly sized box bounds
+
     x0 = np.maximum(x - halfwidth, np.repeat(0, x.shape[0]))
     x1 = np.minimum(x + halfwidth, np.repeat(data.shape[0] - 1, x.shape[0]))
     y0 = np.maximum(y - halfheight, np.repeat(0, y.shape[0]))
@@ -88,6 +92,7 @@ def return_static_box_bounds(x, y, data, halfwidth, halfheight):
     return bounds
 
 def return_box_stats(data, bounds):
+    # Return spacial moments, pixel value statistics and box position
     box_stats = []
     for b in bounds:
         image = data[b[0]:b[2], b[1]:b[3]]
@@ -105,6 +110,7 @@ def return_box_stats(data, bounds):
     return box_stats
 
 def bounds_overlap(b1, b2):
+    # Standard box overlap criterion
     width = 2*STANDARD_BOXSIZE_X+1
     height = 2*STANDARD_BOXSIZE_Y+1
     overlap = max((width - 2*abs(b1[0]-b2[0])) * (height - 2*abs(b1[1]-b2[1])), 0)
