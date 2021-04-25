@@ -8,7 +8,7 @@ from torchvision.models.detection.faster_rcnn import FasterRCNN
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign
 
-from utils import from_dict_to_BoundingBox
+from libs.utils import from_dict_to_BoundingBox
 
 
 def get_anchor_generator(anchor_size: Tuple[tuple] = None, aspect_ratios: Tuple[tuple] = None):

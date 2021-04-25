@@ -14,7 +14,7 @@ def generate_dataset():
     data = h5py.File('data.h5', 'r')
     imgs = [data['rdms'][index][()] for index in range(len(data['rdms']))]
     imgs = np.array(imgs)
-    imgs = np.concatenate((imgs[:, :127, :], imgs[:, 130:, :]), axis=1)   # cut out the artifacts
+    imgs = np.concatenate((imgs[:, :127, :], imgs[:, 130:, :]), axis=1)   # cut out the artifacts in the middle
     targets = {}
     for index in range(len(data['rdms'])):
         for index2 in range(data['labels'][str(index)][()].shape[0]):  # iterate through objects

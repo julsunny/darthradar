@@ -1,19 +1,22 @@
-from torch.utils.data import Dataset
-import pandas as pd
-import os
-import torch
-import h5py
-import albumentations as A
 import numpy as np
 
 from dataloader import RadarDetectionDataSet
 from torch.utils.data import DataLoader
+from libs.utils import collate_double
+from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, EarlyStopping
+from pytorch_lightning import seed_everything
+from pytorch_lightning import Trainer
 
-from transformations import ComposeDouble, Clip, AlbumentationWrapper, FunctionWrapperDouble
-from transformations import normalize_01, normalize
-from utils import collate_double
+
+'''
+Script for training and testing the faster rCNN for radar target detection and classification.
+For rCNN, see https://arxiv.org/abs/1506.01497
+For the implementation which we use here, see https://github.com/johschmidt42/PyTorch-Object-Detection-Faster-RCNN-Tutorial 
+'''
 
 if __name__ ==  '__main__':
+
+    # set parameters for the rCNN
     params = {'BATCH_SIZE': 1,
               'LR': 0.001,
               'PRECISION': 32,
@@ -34,33 +37,10 @@ if __name__ ==  '__main__':
               'CHECKPOINT': 'results_resnet'
               }
 
-    # training transformations and augmentations
-    transforms_training = ComposeDouble([
-        Clip(),
-        AlbumentationWrapper(albumentation=A.HorizontalFlip(p=0.5)),
-        AlbumentationWrapper(albumentation=A.RandomScale(p=0.5, scale_limit=0.5)),
-        # AlbuWrapper(albu=A.VerticalFlip(p=0.5)),
-        FunctionWrapperDouble(np.moveaxis, source=-1, destination=0),
-        FunctionWrapperDouble(normalize_01)
-    ])
-
-    # validation transformations
-    transforms_validation = ComposeDouble([
-        Clip(),
-        FunctionWrapperDouble(np.moveaxis, source=-1, destination=0),
-        FunctionWrapperDouble(normalize_01)
-    ])
-
-    # test transformations
-    transforms_test = ComposeDouble([
-        Clip(),
-        FunctionWrapperDouble(np.moveaxis, source=-1, destination=0),
-        FunctionWrapperDouble(normalize_01)
-    ])
-
-    from pytorch_lightning import seed_everything
+    # set random seed
     seed_everything(params['SEED'])
 
+    # define start and stop indices for train, test and val data
     input_start_train = 0
     input_stop_train = 300
     input_start_dev = 300
@@ -71,21 +51,18 @@ if __name__ ==  '__main__':
     # dataset training
     dataset_train = RadarDetectionDataSet(input_start=input_start_train,
                                            input_stop=input_stop_train,
-                                           transform=transforms_training,
                                            use_cache=True,
                                            mapping=True)
 
     # dataset validation
     dataset_valid = RadarDetectionDataSet(input_start=input_start_dev,
                                            input_stop=input_stop_dev,
-                                           transform=transforms_validation,
                                            use_cache=True,
                                            mapping=True)
 
     # dataset test
     dataset_test = RadarDetectionDataSet(input_start=input_start_test,
                                            input_stop=input_stop_test,
-                                           transform=transforms_test,
                                            use_cache=True,
                                            mapping=True)
 
@@ -128,14 +105,11 @@ if __name__ ==  '__main__':
     task = FasterRCNN_lightning(model=model, lr=params['LR'], iou_threshold=params['IOU_THRESHOLD'])
 
     # callbacks
-    from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, EarlyStopping
-
     checkpoint_callback = ModelCheckpoint(monitor='Validation_mAP', mode='max')
     learningrate_callback = LearningRateMonitor(logging_interval='step', log_momentum=False)
     early_stopping_callback = EarlyStopping(monitor='Validation_mAP', patience=50, mode='max')
 
     # trainer init
-    from pytorch_lightning import Trainer
 
     trainer = Trainer(gpus=0,
                       precision=params['PRECISION'],  # try 16 with enable_pl_optimizer=False
@@ -150,7 +124,6 @@ if __name__ ==  '__main__':
     trainer.fit(task,
                 train_dataloader=dataloader_train,
                 val_dataloaders=dataloader_valid)
-
 
     trainer.test(ckpt_path='best', test_dataloaders=dataloader_test)
 

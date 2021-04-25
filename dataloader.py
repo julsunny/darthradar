@@ -1,14 +1,9 @@
 from torch.utils.data import Dataset
-import pandas as pd
-import os
-import torch
-import h5py
 import numpy as np
 import pickle
 import torch
-from torchvision.ops import box_convert
-from typing import List, Dict
-from transformations import ComposeDouble, ComposeSingle
+from libs.transformations import ComposeDouble
+from preprocessing import generate_dataset
 
 
 class RadarDetectionDataSet(Dataset):
@@ -16,24 +11,27 @@ class RadarDetectionDataSet(Dataset):
     Builds a dataset with images and their respective targets.
     A target is expected to be a pickled file of a dict
     and should contain at least a 'boxes' and a 'labels' key.
-    inputs and targets are expected to be a list of pathlib.Path objects.
-    In case your labels are strings, you can use mapping (a dict) to int-encode them.
+    inputs and targets are expected to be ranges or lists of indices.
     Returns a dict with the following keys: 'x', 'x_name', 'y', 'y_name'
     """
 
     def __init__(self,
-                 input_start = 0,
-                 input_stop = 375,
+                 input_indices = None,
                  use_cache: bool = False,
                  convert_to_format: str = None,
                  mapping: bool = True,
                  transform: ComposeDouble = None,
                  ):
-        self.inputs = range(input_start,input_stop)
-        self.targets = range(input_start,input_stop)
-        self.input_images = np.load("doppler_data.npy")
-        with open("label_data.pkl","rb") as f:
-            self.target_dicts = pickle.load(f)
+        if input_indices is None:
+            input_indices = range(375)
+        else:
+            self.inputs = input_indices
+        self.targets = input_indices
+
+        # bring the dataset into the format accepted by the faster rCNN
+        inp_images, targets = generate_dataset()
+        self.input_images = inp_images
+        self.target_dicts = targets
 
         self.use_cache = use_cache
         self.convert_to_format = convert_to_format
@@ -47,13 +45,22 @@ class RadarDetectionDataSet(Dataset):
                 self.cached_data = pool.starmap(self.read_doppler, zip(self.inputs, self.targets))
 
     def read_doppler(self, inp, tar):
+        '''
+        load one doppler map (im) with corresponding labels (tar)
+        :param inp:
+        :param tar:
+        :return:
+        '''
         im = self.input_images[inp, :, :]
         im = im.T
+        # normalize data
+        im = (im-im.mean())/im.std()
         im = im.reshape(1, im.shape[0], im.shape[1])
-        im = np.concatenate((im,im,im),axis=0)          # fake an RGB image
+        im = np.concatenate((im, im, im),axis=0)   # fake an RGB image since rCNN only works with RGB tensors
         try:
             tar = self.target_dicts[str(tar)]
         except:
+            # if nothing is in the doppler map, the only label is the background (corresponds to label 0)
             tar = {"boxes": np.array([0, 0, im.shape[0], im.shape[1]]).reshape(1,4), "labels": np.array([0])}
         return im, tar
 
@@ -61,6 +68,7 @@ class RadarDetectionDataSet(Dataset):
         return len(self.inputs)
 
     def map_class_to_int(self, labels):
+        '''Translate the dataset labels to labels compatible with rCNN'''
         translation = {0: 1, 1: 2, 2: 3, 3: 4}
         new_list = [translation[l] for l in labels]
         return np.array(new_list)
@@ -95,12 +103,6 @@ class RadarDetectionDataSet(Dataset):
         except TypeError:
             labels = torch.tensor(labels).to(torch.int64)
 
-        # Convert format
-        #if self.convert_to_format == 'xyxy':
-        #    boxes = box_convert(boxes, in_fmt='xywh', out_fmt='xyxy')  # transforms boxes from xywh to xyxy format
-        #elif self.convert_to_format == 'xywh':
-        #    boxes = box_convert(boxes, in_fmt='xyxy', out_fmt='xywh')  # transforms boxes from xyxy to xywh format
-
         # Create target
         target = {'boxes': boxes,
                   'labels': labels}
@@ -108,8 +110,8 @@ class RadarDetectionDataSet(Dataset):
         # Preprocessing
         target = {key: value.numpy() for key, value in target.items()}  # all tensors should be converted to np.ndarrays
 
-        #if self.transform is not None:
-        #    x, target = self.transform(x, target)  # returns np.ndarrays
+        if self.transform is not None:
+            x, target = self.transform(x, target)  # returns np.ndarrays
 
         # Typecasting
         x = torch.from_numpy(x).type(torch.float32)
@@ -159,7 +161,3 @@ class RadarImageTargetSet():
 def get_img_tgt_tuple_by_id(id: int):
     ds = RadarDetectionDataSet()
     return (ds[0]['x'], ds[0]['y'])
-    #images = np.load("doppler_data.npy")
-    #with open("label_data.pkl","rb") as f:
-    #    target_dicts = pickle.load(f)
-    #return (images[id], target_dicts[str(id)])

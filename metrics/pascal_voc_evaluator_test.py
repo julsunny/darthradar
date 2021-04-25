@@ -1,6 +1,6 @@
 import pathlib
-from utils import get_filenames_of_path
-from utils import from_file_to_BoundingBox
+from libs.utils import get_filenames_of_path
+from libs.utils import from_file_to_BoundingBox
 from itertools import chain
 from metrics.pascal_voc_evaluator import get_pascalvoc_metrics
 from metrics.enumerators import MethodAveragePrecision
@@ -44,7 +44,7 @@ for batch in dataloader_valid:
         preds = task.model(x)
 
     from itertools import chain
-    from utils import from_dict_to_BoundingBox
+    from libs.utils import from_dict_to_BoundingBox
 
     gt_boxes = list(
         chain(*[from_dict_to_BoundingBox(target, name=name, groundtruth=True) for target, name in zip(y, x_name)]))
