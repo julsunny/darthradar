@@ -111,13 +111,19 @@ def test_model_endtoend(model, stats_test, labels_test):
     return true_pos, false_pos, false_neg
 
 def test_mean_performance(runs):
+    print("Now testing model performance...")
+    print("Averaging accuracy over several runs (classifier only)...")
     score = 0
     for i in range(runs):
         stats_train, stats_test, labels_train, labels_test = generate_train_test_set(0.3)
         model = train_model(stats_train, labels_train[:, 1])
         score += test_model_class_only(model, stats_test, labels_test, conf_matrix = False)/runs
 
+    print("--------------------------------------------------------")
     print("Mean Accuracy (classifier only): ", score)
+    print("--------------------------------------------------------")
+    print("Averaging full pipeline performance over several runs...")
+    print("--------------------------------------------------------")
 
     true_pos_mean = 0
     false_pos_mean = 0
@@ -135,8 +141,11 @@ def test_mean_performance(runs):
     print("Mean True Positives (end-to-end): ", true_pos_mean)
     print("Mean False Positives (end-to-end): ", false_pos_mean)
     print("Mean False Positives (end-to-end): ", false_neg_mean)
-    print("-----------------------------------")
+    print("--------------------------------------------------------")
     print("Mean Accuracy (end-to-end): ", accuracy_mean)
+    print("--------------------------------------------------------")
+    print("Now plotting demo of pipeline performance.")
+    print("See Figure 1 for results.")
 
 def classification_demo(delay):
     # Read the radar data into a variable.
@@ -159,30 +168,30 @@ def classification_demo(delay):
         numpeaks, x, y, strength = detect_peaks(dmap, tx=20, ty=3, gx=2, gy=1, rate_fa=0.15)
         bounds = return_static_box_bounds(x, y, dmap, STANDARD_BOXSIZE_X, STANDARD_BOXSIZE_Y)
         stats_pred = return_box_stats(dmap, bounds)
-        greens = np.zeros(len(stats_pred), dtype=int)
+        yellows = np.zeros(len(stats_pred), dtype=int)
         reds = np.zeros(len(stats_pred), dtype=int)
-        blues = np.zeros(len(stats_pred), dtype=int)
+        limes = np.zeros(len(stats_pred), dtype=int)
         for i in range(len(stats_pred)):
             c = int(model.predict(np.array([stats_pred[i]]))[0])
             if c == 0:
-                blues[i] = 1
+                limes[i] = 1
             elif c == 1:
                 reds[i] = 1
             else:
-                greens[i] = 1
+                yellows[i] = 1
 
-        plt.imshow(dmap.T, origin='lower', interpolation='bilinear', cmap='viridis')
-        plt.scatter(x[greens==1], y[greens==1], color='green', s=20, marker = '^')
-        plt.scatter(x[reds==1], y[reds==1], color='red', s=20, marker = 'o')
-        plt.scatter(x[blues==1], y[blues==1], color='blue', s=20, marker = 's')
+        plt.imshow(dmap.T, origin='lower', interpolation='none', cmap='viridis')
+        plt.scatter(x[yellows==1], y[yellows==1], color='yellow', s=10, marker = 's')
+        plt.scatter(x[reds==1], y[reds==1], color='red', s=10, marker = 'o')
+        plt.scatter(x[limes==1], y[limes==1], color='lime', s=10, marker = '^')
 
         for i in data['labels'][str(idx)]:
             if i[4] == 0:
-                color = 'blue'
+                color = 'green'
             elif i[4] == 1:
                 color = 'red'
             elif i[4] == 2:
-                color = 'green'
+                color = 'yellow'
             else:
                 continue
 
@@ -194,7 +203,6 @@ def classification_demo(delay):
                                      edgecolor=color, facecolor='none')
             ax.add_patch(rect)
 
+        plt.savefig("example"+str(idx)+".png",dpi=500)
         plt.draw()
         plt.pause(delay)
-
-classification_demo(1)
