@@ -1,5 +1,3 @@
-import numpy as np
-
 from dataloader import RadarDetectionDataSet
 from torch.utils.data import DataLoader
 from libs.utils import collate_double
@@ -89,7 +87,7 @@ if __name__ ==  '__main__':
     print("-----------------done creating datasets!-----------------")
 
 
-    from faster_RCNN import get_fasterRCNN_resnet
+    from libs.faster_RCNN import get_fasterRCNN_resnet
 
     model = get_fasterRCNN_resnet(num_classes=params['CLASSES'],
                                   backbone_name=params['BACKBONE'],
@@ -99,7 +97,7 @@ if __name__ ==  '__main__':
                                   min_size=params['MIN_SIZE'],
                                   max_size=params['MAX_SIZE'])
 
-    from faster_RCNN import FasterRCNN_lightning
+    from libs.faster_RCNN import FasterRCNN_lightning
 
     task = FasterRCNN_lightning(model=model, lr=params['LR'], iou_threshold=params['IOU_THRESHOLD'])
 
