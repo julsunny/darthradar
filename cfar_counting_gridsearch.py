@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from sklearn.metrics import accuracy_score as accuracy  # Our evaluation metric for this example.
-
 from peakDetection import *
+
+#Gridsearch script that can be used to optimize the hyperparameters of the CFAR procedure
 
 # Read the radar data into a variable.
 data = h5py.File('data.h5', 'r')

@@ -2,7 +2,8 @@ from sklearn.metrics import accuracy_score as accuracy  # Our evaluation metric 
 
 from peakDetection import *
 
-# Read the radar data into a variable.
+# Demo that predicts the number of instances in each picture based
+# on the CFAR peak detection and compares it to the ground truth labels.
 data = h5py.File('data.h5', 'r')
 X = []
 y = []
@@ -10,6 +11,7 @@ y = []
 for idx,element in enumerate(data['rdms']):
     X.append(data['rdms'][idx])
     number_targets = 0
+    # Number of entities not labeled as "no object" in each picture
     for target in data['labels'][str(idx)]:
         if target[4] != 3: number_targets += 1
     y.append(number_targets)
@@ -18,8 +20,8 @@ X_test = np.array(X)
 y_test = np.array(y)
 
 y_pred = np.zeros(y_test.shape)
-i = 0
 
+i = 0
 for dmap in X_test:
     dmap = cutout_middle_strip(dmap, 120, 136)
     numpeaks, x, y, strength = detect_peaks(dmap, tx=20, ty=3, gx=2, gy=1, rate_fa=0.15)

@@ -1,26 +1,29 @@
-import h5py # Required to read the radar data.
-import numpy as np
 from sklearn.model_selection import train_test_split # Automatically split train and test data.
-from sklearn import preprocessing # Preprocessing module to normalize X data
-from sklearn.neural_network import MLPClassifier # The Multi-layer Perceptron classifier.
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score as accuracy # Our evaluation metric for this example.
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from peakDetection import *
 from sklearn.metrics import plot_confusion_matrix # Module for plotting the confusion matrix.
 
+# Adapt the uniform standard size of bounding boxes here
 STANDARD_BOXSIZE_X = 11
 STANDARD_BOXSIZE_Y = 7
+
 data = h5py.File('data.h5', 'r')
 def generate_train_test_set(split):
-    # Read the radar data into a variable.
+    # Generate np arrays with box statistics and image labels
+    # Labels include ID of image in dataset, box labels, corner points of the box
+    # Length of those arrays along axis 0 is _not_ the number of images, but the
+    # total number of labels in all images
+    # Perform a train-test-split on those arrays
+
     stats = []
     labels = []
     boxes = []
     imageNo = []
 
+    # Replace the labeled ground truth boxes by boxes of given uniform size around the same center point
+    # (the ground truth boxes do not correspond well to the pixel blobs in the radar image).
+    # Calculate box statistics wrt to those uniform-size boxes.
     for idx, element in enumerate(data['rdms']):
         for target in data['labels'][str(idx)]:
             if target[4] != 3:
@@ -42,12 +45,18 @@ def generate_train_test_set(split):
     return stats_train, stats_test, labels_train, labels_test
 
 def train_model(stats_train, labels_train):
+    # Train the decision tree
     model = DecisionTreeClassifier(max_depth=3)
     model.fit(stats_train, labels_train)
 
     return model
 
 def test_model_class_only(model, stats_test, labels_test, conf_matrix = True):
+    """Test the decision tree classification only. This means that the test set
+       not further processed after generate_train_test_set: the decision tree is
+       applied to the content of the ground-truth based bounding boxes, no
+       object detection involved at this point."""
+
     labels_pred = model.predict(stats_test)
     score = accuracy(labels_pred, labels_test[:,1])
     if conf_matrix == True:
@@ -57,6 +66,12 @@ def test_model_class_only(model, stats_test, labels_test, conf_matrix = True):
 
 
 def test_model_endtoend(model, stats_test, labels_test):
+    """Test the full end-to-end pipeline. Overview: First, the test data is cast into a suitable format.
+       Next, iterating through all images in the test set, boxes based on peak detection are generated.
+       Then, using the overlap criterion intersection area/union area > 1/2, an overlap matrix is
+       constructed, containing 1s whereever a predicted box has sufficient overlaps with a ground truth
+       box.
+    """
     img_data = {}
     true_pos = 0
     false_pos = 0
@@ -203,6 +218,7 @@ def classification_demo(delay):
                                      edgecolor=color, facecolor='none')
             ax.add_patch(rect)
 
+        #Optionally, figures can be saved
         plt.savefig("example"+str(idx)+".png",dpi=500)
         plt.draw()
         plt.pause(delay)
