@@ -77,7 +77,8 @@ class Cluster:
         return [x0, y0, x1, y1]
 
 def rel_to_abs_box(pre_box, ref_box):
-    pass
+    abs_box = [pre_box[0] + ref_box[0], pre_box[1] + ref_box[1], pre_box[0] + ref_box[2], pre_box[1] + ref_box[3]]
+    return abs_box
     
 class DBSCAN():
     """A density based clustering method that expands clusters from 
@@ -185,7 +186,7 @@ class DBSCAN():
         return cluster_labels
 #%%
 
-def refine_box(rdms_raw, pre_box, strength, n_objects = 1, gradient = True, color_scaling = None, clustering_kwargs = {"eigen_solver" : "arpack", "n_jobs" : -1}):
+def refine_box(rdms_raw, pre_box, strength, n_objects = 2, gradient = True, color_scaling = None, clustering_kwargs = {"eigen_solver" : "arpack", "n_jobs" : -1}):
     #make copy of image
     rdms = rdms_raw[pre_box[0]:pre_box[2], pre_box[1]:pre_box[3]].copy()
     
@@ -226,10 +227,10 @@ def refine_box(rdms_raw, pre_box, strength, n_objects = 1, gradient = True, colo
         
         boxes = clustering.get_boxes()
     
+    return [rel_to_abs_box(pre_box, ref_box) for ref_box in boxes]
     
-    return boxes
-    
-    
+def box_selection():
+    pass
     
     
     
