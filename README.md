@@ -60,5 +60,7 @@ With the introduction of R-CNNs and Faster R-CNNs in 2015, the accuracy of objec
 Since our task is somewhat similar (detect blobs of arbitrary size, then classify), we tried applying an R-CNN to our data. 
 We used a `resnet-18` backbone pretrained on photos. We chose the anchor sizes (2, 4, 8, 16, 32). The model still doesn't train very well. One can try changing the learning rate, the optimizer (SGD -> Adam), the anchor sizes, the backbone or any other parameter listed in the `params` dictionary.
 You can run the training and testing by calling
-```python3 train.py```
+```
+python3 train.py
+```
 Our implementation heavily relies on the following R-CNN tutorial: https://github.com/johschmidt42/PyTorch-Object-Detection-Faster-RCNN-Tutorial.
