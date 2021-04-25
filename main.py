@@ -3,7 +3,10 @@ import peakDetection
 import clustering_lib
 import detection
 import numpy as np
+import plotting_stuff
 
+
+#%%
 if True or __name__ == "__main__":
     # create dataset
     ds = RadarImageTargetSet()
@@ -18,7 +21,7 @@ if True or __name__ == "__main__":
         assert predicted_number_of_peaks == len(predicted_boxes)
         
         # refine boxes using spectral graph clustering
-        refined_boxes = np.array([clustering_lib.refine_box(img, box, strength, n_objects = 1, color_scaling = 1) for box, strength in zip(predicted_boxes, peak_strengths)])
+        refined_boxes = np.array([clustering_lib.refine_box(img, box, strength, n_objects = 1, color_scaling = 1, gradient = False)[0] for box, strength in zip(predicted_boxes, peak_strengths)])
 
         # add refined boxes to dataset
         target['refined_boxes'] = refined_boxes
@@ -30,3 +33,18 @@ if True or __name__ == "__main__":
         labeled_boxes = target['boxes']
         goodness = detection.evaluate_boxes_pair(refined_boxes, labeled_boxes)
         target['box_goodness'] = goodness
+#%%
+sample_number = 8
+samples = []
+for i, (img, target) in enumerate(ds):
+    samples.append((img, target))
+    if i == sample_number:
+        break
+    
+plotting_stuff.grid_plot(samples)
+
+#%%
+print(samples[0][1]["refined_boxes"])
+
+
+
