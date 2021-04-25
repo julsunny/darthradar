@@ -122,10 +122,6 @@ class RadarDetectionDataSet(Dataset):
 
 class RadarImageTargetSet():
     """
-    WARNING:
-    run preprocessing before using:
-        > python preprocessing.py
-
     Images are stored as numpy arrays.
     Target dictionaries have format: {
         'boxes'  : (N, 4) numpy array
@@ -141,9 +137,10 @@ class RadarImageTargetSet():
     """
 
     def __init__(self):
-        self.input_images = np.load("doppler_data.npy")
-        with open("label_data.pkl","rb") as f:
-            self.target_dicts = pickle.load(f)
+        imgs, targets = generate_dataset()
+        self.input_images = imgs
+        assert isinstance(self.input_images, np.ndarray)
+        self.target_dicts = targets
 
     def __getitem__(self, index: int):
         """Read image and target-dict given indexes"""
