@@ -46,6 +46,10 @@ For each box, a feature vector (13x1) containing higher statistics is calculated
 2) Center coordinates of the corresponding bounding box;
 3) mean and variance of pixel intensity in the image (note: this is different from the above moments).
 Finally, a decision tree (max. depth 3) is trained on the feature vectors. Of various classifiers considered, we found the decision tree to perform best. 
+To count objects on the range Doppler map, peak detection suffices. To run the counting demo, write
+```
+python3 counting_demo.py
+```
 
 
 #### CNN target classifier 
