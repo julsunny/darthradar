@@ -69,9 +69,12 @@ def test_model_endtoend(model, stats_test, labels_test):
     """Test the full end-to-end pipeline. Overview: First, the test data is cast into a suitable format.
        Next, iterating through all images in the test set, boxes based on peak detection are generated.
        Then, using the overlap criterion intersection area/union area > 1/2, an overlap matrix is
-       constructed, containing 1s whereever a predicted box has sufficient overlaps with a ground truth
-       box.
+       constructed, containing 1s wherever a predicted box has sufficient overlap with a ground truth
+       box. Finally, with a scheme elaborated below, true-positive, false-positive and false-negatives
+       are accumulated.
     """
+
+    # Data format generation
     img_data = {}
     true_pos = 0
     false_pos = 0
@@ -84,18 +87,18 @@ def test_model_endtoend(model, stats_test, labels_test):
         img_data[str(img_id)].append((label[1], label[2:5]))
 
     for key, val in img_data.items():
-        d = cutout_middle_strip(data['rdms'][float(key)], 122, 134)
+        # Generate peaks, bounds and box statistics for the predicted boxes
+        d = cutout_middle_strip(data['rdms'][int(float(key))], 122, 134)
         numpeaks, x, y, strength = detect_peaks(d, tx=20, ty=3, gx=2, gy=1, rate_fa=0.15)
         bounds = return_static_box_bounds(x, y, d, STANDARD_BOXSIZE_X, STANDARD_BOXSIZE_Y)
         stats_pred = return_box_stats(d, bounds)
 
+        # Generate overlap matrix
         overlap_matrix = np.zeros((len(val), len(bounds)))
 
         for l in range(len(val)):
             for b in range(len(bounds)):
                 overlap_matrix[l,b] = bounds_overlap(val[l][1], bounds[b])
-
-        pred_status = np.zeros(len(bounds))
 
         for l in range(len(val)):
             already_matched = False
@@ -219,6 +222,6 @@ def classification_demo(delay):
             ax.add_patch(rect)
 
         #Optionally, figures can be saved
-        plt.savefig("example"+str(idx)+".png",dpi=500)
+        #plt.savefig("example"+str(idx)+".png",dpi=500)
         plt.draw()
         plt.pause(delay)
