@@ -17,8 +17,8 @@ For the implementation which we use here, see https://github.com/johschmidt42/Py
 if __name__ ==  '__main__':
 
     # set parameters for the rCNN
-    params = {'BATCH_SIZE': 1,
-              'LR': 0.001,
+    params = {'BATCH_SIZE': 2,
+              'LR': 0.0001,
               'PRECISION': 32,
               'CLASSES': 5,
               'SEED': 42,
