@@ -48,6 +48,9 @@ y = []
 for (img, tgt) in ds:
     #print(img.shape)
     for (class_type, (y0, x0, y1, x1)) in zip(tgt['labels'], list(tgt['boxes'])):
+        if np.isclose(class_type, 3.0):
+            # don't include "no objects"
+            continue
         c.append([0.5 * (x0 + x1), 0.5 * (y0 + y1)])
         # cut box out of image
         #print(class_type)
@@ -64,7 +67,7 @@ for (img, tgt) in ds:
         padded = np.pad(cutout, ((y_padding // 2, y_padding - (y_padding // 2)), (x_padding // 2, x_padding - (x_padding // 2))), mode='constant', constant_values=0.0)
         x.append(padded)
         # class as one hot encoding
-        y.append([1.0 if int(class_type) == i else 0.0 for i in range(4)])
+        y.append([1.0 if int(class_type) == i else 0.0 for i in range(3)])
 
 x = np.array(x)
 c = np.array(c)
@@ -150,7 +153,7 @@ z = Dense(64, activation="relu")(z)
 
 # the final output which gives confidence with respect
 # to the three classes
-z = Dense(4, activation="softmax")(z)
+z = Dense(3, activation="softmax")(z)
 
 # compilation and print summary
 model = Model(inputs=[x.input, y.input], outputs=z)
@@ -199,7 +202,7 @@ y_pred_abs = np.argmax(y_pred, axis=1)
 y_test_abs = np.argmax(y_test, axis=1)
 # create confusion matrix
 cm=confusion_matrix(y_test_abs,y_pred_abs)
-plt.imshow(cm)
+plt.imshow(cm, cmap = 'jet')
 plt.title("confusion matrix")
 plt.show()
 print("confusion matrix:")
