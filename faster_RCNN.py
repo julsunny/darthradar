@@ -1,6 +1,6 @@
 from itertools import chain
 from typing import Tuple, List
-from backbone_resnet import get_resnet_backbone, get_resnet_fpn_backbone
+from libs.backbone_resnet import get_resnet_backbone, get_resnet_fpn_backbone
 
 import pytorch_lightning as pl
 import torch

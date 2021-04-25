@@ -1,6 +1,6 @@
 from dataloader import RadarImageTargetSet
 import peakDetection
-import clustering_lib
+from libs import clustering_lib
 import detection
 import numpy as np
 import plotting_stuff

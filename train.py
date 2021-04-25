@@ -6,6 +6,7 @@ from libs.utils import collate_double
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, EarlyStopping
 from pytorch_lightning import seed_everything
 from pytorch_lightning import Trainer
+from random import shuffle
 
 
 '''
@@ -40,29 +41,27 @@ if __name__ ==  '__main__':
     # set random seed
     seed_everything(params['SEED'])
 
-    # define start and stop indices for train, test and val data
-    input_start_train = 0
-    input_stop_train = 300
-    input_start_dev = 300
-    input_stop_dev = 330
-    input_start_test = 330
-    input_stop_test = 375
+    # define data indices for train, test and val data
+    # shuffle the indices before splitting into train, test, dev
+    shuffled_indices = list(range(0, 375))
+    shuffle(shuffled_indices)
+    # split the data into train, test and validation
+    input_indices_train = shuffled_indices[:300]
+    input_indices_test = shuffled_indices[300:340]
+    input_indices_dev = shuffled_indices[340:]
 
     # dataset training
-    dataset_train = RadarDetectionDataSet(input_start=input_start_train,
-                                           input_stop=input_stop_train,
+    dataset_train = RadarDetectionDataSet(input_indices=input_indices_train,
                                            use_cache=True,
                                            mapping=True)
 
     # dataset validation
-    dataset_valid = RadarDetectionDataSet(input_start=input_start_dev,
-                                           input_stop=input_stop_dev,
+    dataset_valid = RadarDetectionDataSet(input_indices=input_indices_dev,
                                            use_cache=True,
                                            mapping=True)
 
     # dataset test
-    dataset_test = RadarDetectionDataSet(input_start=input_start_test,
-                                           input_stop=input_stop_test,
+    dataset_test = RadarDetectionDataSet(input_indices=input_indices_test,
                                            use_cache=True,
                                            mapping=True)
 
